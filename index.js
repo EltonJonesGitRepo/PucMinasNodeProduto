@@ -1,67 +1,91 @@
-const express = require('express')
-const app = express()
+const express = require('express');
+const bodyParser = require('body-parser');
+const knex = require('knex')({
+    client: 'sqlite3',
+    connection: {
+        filename: './dev.sqlite3'
+    }
+});
 
-const lista_produtos = {
-  produtos: [
-    { id: 1, descricao: "Arroz parboilizado 5Kg", valor: 25.00, marca: "Tio João" },
-    { id: 2, descricao: "Maionese 250gr", valor: 7.20, marca: "Helmans" },
-    { id: 3, descricao: "Iogurte Natural 200ml", valor: 2.50, marca: "Itambé" },
-    { id: 4, descricao: "Batata Maior Palha 300gr", valor: 15.20, marca: "Chipps" },
-    { id: 5, descricao: "Nescau 400gr", valor: 8.00, marca: "Nestlé" },
-  ]
-}
+const app = express();
+app.use(bodyParser.json());
 
-app.use(express.json())
+app.get('/produtos', async (req, res) => {
+    try {
+        const produtos = await knex('produtos').select('*');
+        res.json(produtos);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erro ao obter produtos');
+    }
+});
 
-// Obter a lista de produtos
-app.get('/produtos', (req, res) => {
-  res.json(lista_produtos.produtos)
-})
+app.get('/produtos/:id', async (req, res) => {
+    try {
+        const produto = await knex('produtos').where({ id: req.params.id }).first();
+        if (!produto) {
+            res.status(404).send('Produto não encontrado');
+        } else {
+            res.json(produto);
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erro ao obter produto');
+    }
+});
 
-// Obter um produto específico
-app.get('/produtos/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const produto = lista_produtos.produtos.find(p => p.id === id)
-  if (produto) {
-    res.json(produto)
-  } else {
-    res.status(404).json({ message: 'Produto não encontrado' })
-  }
-})
+app.post('/produtos', async (req, res) => {
+    const { descricao, valor, marca } = req.body;
+    if (!descricao || !valor || !marca) {
+        res.status(400).send('Campos obrigatórios não informados');
+        return;
+    }
+    try {
+        const [id] = await knex('produtos').insert({ descricao, valor, marca });
+        const produto = await knex('produtos').where({ id }).first();
+        res.status(201).json(produto);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erro ao incluir produto');
+    }
+});
 
-// Incluir um produto
-app.post('/produtos', (req, res) => {
-  const produto = req.body
-  produto.id = lista_produtos.produtos.length + 1
-  lista_produtos.produtos.push(produto)
-  res.status(201).json(produto)
-})
+app.put('/produtos/:id', async (req, res) => {
+    const { descricao, valor, marca } = req.body;
+    if (!descricao || !valor || !marca) {
+        res.status(400).send('Campos obrigatórios não informados');
+        return;
+    }
+    try {
+        const quantidadeDeProdutosAtualizados = await knex('produtos')
+            .where({ id: req.params.id })
+            .update({ descricao, valor, marca });
+        if (quantidadeDeProdutosAtualizados === 0) {
+            res.status(404).send('Produto não encontrado');
+        } else {
+            const produto = await knex('produtos').where({ id: req.params.id }).first();
+            res.json(produto);
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erro ao atualizar produto');
+    }
+});
 
-// Alterar um produto
-app.put('/produtos/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const produtoIndex = lista_produtos.produtos.findIndex(p => p.id === id)
-  if (produtoIndex !== -1) {
-    lista_produtos.produtos[produtoIndex] = { ...req.body, id }
-    res.json(lista_produtos.produtos[produtoIndex])
-  } else {
-    res.status(404).json({ message: 'Produto não encontrado' })
-  }
-})
-
-// Excluir um produto
-app.delete('/produtos/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const produtoIndex = lista_produtos.produtos.findIndex(p => p.id === id)
-  if (produtoIndex !== -1) {
-    const produtoExcluido = lista_produtos.produtos.splice(produtoIndex, 1)
-    res.json(produtoExcluido[0])
-  } else {
-    res.status(404).json({ message: 'Produto não encontrado' })
-  }
-})
+app.delete('/produtos/:id', async (req, res) => {
+    try {
+        const quantidadeDeProdutosExcluidos = await knex('produtos').where({ id: req.params.id }).delete();
+        if (quantidadeDeProdutosExcluidos === 0) {
+            res.status(404).send('Produto não encontrado');
+        } else {
+            res.send('Produto excluído com sucesso');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erro ao excluir produto');
+    }
+});
 
 app.listen(3000, () => {
-    console.log('Server running on port 3000');
-  });
-
+    console.log('API rodando na porta 3000');
+});
