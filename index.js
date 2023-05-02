@@ -10,79 +10,79 @@ const knex = require('knex')({
 const app = express();
 app.use(bodyParser.json());
 
-app.get('/produtos', async (req, res) => {
+app.get('/carros', async (req, res) => {
     try {
-        const produtos = await knex('produtos').select('*');
-        res.json(produtos);
+        const carros = await knex('carros').select('*');
+        res.json(carros);
     } catch (error) {
         console.error(error);
-        res.status(500).send('Erro ao obter produtos');
+        res.status(500).send('Erro ao obter carros');
     }
 });
 
-app.get('/produtos/:id', async (req, res) => {
+app.get('/carros/:id', async (req, res) => {
     try {
-        const produto = await knex('produtos').where({ id: req.params.id }).first();
-        if (!produto) {
-            res.status(404).send('Produto não encontrado');
+        const carro = await knex('carros').where({ id: req.params.id }).first();
+        if (!carro) {
+            res.status(404).send('Carro não encontrado');
         } else {
-            res.json(produto);
+            res.json(carro);
         }
     } catch (error) {
         console.error(error);
-        res.status(500).send('Erro ao obter produto');
+        res.status(500).send('Erro ao obter carro');
     }
 });
 
-app.post('/produtos', async (req, res) => {
+app.post('/carros', async (req, res) => {
     const { descricao, valor, marca } = req.body;
     if (!descricao || !valor || !marca) {
         res.status(400).send('Campos obrigatórios não informados');
         return;
     }
     try {
-        const [id] = await knex('produtos').insert({ descricao, valor, marca });
-        const produto = await knex('produtos').where({ id }).first();
-        res.status(201).json(produto);
+        const [id] = await knex('carros').insert({ descricao, valor, marca });
+        const carro = await knex('carros').where({ id }).first();
+        res.status(201).json(carro);
     } catch (error) {
         console.error(error);
-        res.status(500).send('Erro ao incluir produto');
+        res.status(500).send('Erro ao incluir carro');
     }
 });
 
-app.put('/produtos/:id', async (req, res) => {
+app.put('/carros/:id', async (req, res) => {
     const { descricao, valor, marca } = req.body;
     if (!descricao || !valor || !marca) {
         res.status(400).send('Campos obrigatórios não informados');
         return;
     }
     try {
-        const quantidadeDeProdutosAtualizados = await knex('produtos')
+        const quantidadeDeCarrosAtualizados = await knex('carros')
             .where({ id: req.params.id })
             .update({ descricao, valor, marca });
-        if (quantidadeDeProdutosAtualizados === 0) {
-            res.status(404).send('Produto não encontrado');
+        if (quantidadeDeCarrosAtualizados === 0) {
+            res.status(404).send('Carro não encontrado');
         } else {
-            const produto = await knex('produtos').where({ id: req.params.id }).first();
-            res.json(produto);
+            const carro = await knex('carros').where({ id: req.params.id }).first();
+            res.json(carro);
         }
     } catch (error) {
         console.error(error);
-        res.status(500).send('Erro ao atualizar produto');
+        res.status(500).send('Erro ao atualizar carro');
     }
 });
 
-app.delete('/produtos/:id', async (req, res) => {
+app.delete('/carros/:id', async (req, res) => {
     try {
-        const quantidadeDeProdutosExcluidos = await knex('produtos').where({ id: req.params.id }).delete();
-        if (quantidadeDeProdutosExcluidos === 0) {
-            res.status(404).send('Produto não encontrado');
+        const quantidadeDeCarrosExcluidos = await knex('carros').where({ id: req.params.id }).delete();
+        if (quantidadeDeCarrosExcluidos === 0) {
+            res.status(404).send('Carro não encontrado');
         } else {
-            res.send('Produto excluído com sucesso');
+            res.send('Carro excluído com sucesso');
         }
     } catch (error) {
         console.error(error);
-        res.status(500).send('Erro ao excluir produto');
+        res.status(500).send('Erro ao excluir Carro');
     }
 });
 
