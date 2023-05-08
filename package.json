@@ -1,0 +1,30 @@
+{
+  "name": "pucminasnodeproduto",
+  "version": "1.0.0",
+  "description": "Trabalho de Node - Pós Graduação Puc Minas",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "knex": "^2.4.2",
+    "sqlite3": "^5.1.6",
+    "morgan": "^1.10.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "helmet": "^6.1.5",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EltonJonesGitRepo/PucMinasNodeProduto.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EltonJonesGitRepo/PucMinasNodeProduto/issues"
+  },
+  "homepage": "https://github.com/EltonJonesGitRepo/PucMinasNodeProduto#readme"
+}
