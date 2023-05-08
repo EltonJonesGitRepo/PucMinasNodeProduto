@@ -8,7 +8,6 @@ const bcrypt = require ('bcryptjs')
 const jwt = require ('jsonwebtoken')
 
 const routerAPIv2 = require ('./routes/routerAPI-v2')
-//app.use ('/api/v2', routerAPIv2)
 
 const bodyParser = require('body-parser');
 const knex = require('knex')({
@@ -24,10 +23,6 @@ app.use(bodyParser.json());
 
 app.use (morgan("tiny"))
 app.use (helmet())
-
-// app.use (function (req, res) {
-//     res.status(404).send ('Recurso não encontrado.')
-//   })
 
 
 const checkToken = (req, res, next) => {
@@ -148,7 +143,7 @@ app.get('/produtos', checkToken, function (req, res) {
           login: req.body.login, 
           senha: bcrypt.hashSync(req.body.senha, 8), 
           email: req.body.email,
-          roles: "USER"
+          roles: req.body.roles
       }, ['id'])
       .then((result) => {
           let usuario = result[0]
