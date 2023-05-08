@@ -48,7 +48,16 @@ const checkToken = (req, res, next) => {
     } 
     else
       res.status(401).json({ message: 'Acesso negado'})
-  }
+  };
+
+  const isAdmin  = (req, res, next) => {
+    if (req.roles?.split(';').includes('ADMIN')){
+        next()
+    }
+    else {
+        res.status(403).json({ message: 'Acesso negado'})
+    }
+  };
 
 
 app.get('/carros', async (req, res) => {
@@ -128,13 +137,64 @@ app.delete('/carros/:id', async (req, res) => {
 });
 
 // Cria um manipulador da rota padrão 
-app.get('/produtos', checkToken, function (req, res) {
-    //app.get('/produtos', function (req, res) {
+app.get('/produtos', checkToken, function (req, res) {    
     knex.select('*').from('produtos')
     .then (produtos => res.json(produtos))
     .catch (err => res.json ({ message: `Erro ao recuperar produtos: ${err.message}` }))
   });
 
+  app.post('/produtos', checkToken, isAdmin, function (req, res) {
+    knex('produtos').insert(req.body, ['id'])
+    .then (produtos => {
+      let id = produtos[0].id
+      res.json({ message: `Produto inserido com sucesso.`, id  })
+    })
+    .catch (err => res.json ({ message: `Erro ao inserir produto: ${err.message}` }))
+  });
+
+  app.get('/produtos/:id', checkToken, function (req, res) {
+    let id = req.params.id
+    knex.select('*').from('produtos').where({ id })
+    .then (produtos => res.json(produtos))
+    .catch (err => res.json ({ message: `Erro ao recuperar produtos: ${err.message}` }))
+  });
+
+  app.put('/produtos/:id', checkToken, isAdmin, async (req, res) => {
+    const { descricao, valor, marca } = req.body;
+    if (!descricao || !valor || !marca) {
+        res.status(400).send('Campos obrigatórios não informados');
+        return;
+    }
+    try {
+        const quantidadeDeProdutosAtualizados = await knex('produtos')
+            .where({ id: req.params.id })
+            .update({ descricao, valor, marca });
+        if (quantidadeDeProdutosAtualizados === 0) {
+            res.status(404).send('Produto não encontrado');
+        } else {
+            const produto = await knex('produtos').where({ id: req.params.id }).first();
+            res.json(produto);
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erro ao atualizar produto');
+    }
+});
+
+
+app.delete('/produtos/:id', checkToken, isAdmin, async (req, res) => {
+    try {
+        const quantidadeDeProdutosExcluidos = await knex('produtos').where({ id: req.params.id }).delete();
+        if (quantidadeDeProdutosExcluidos === 0) {
+            res.status(404).send('Produto não encontrado');
+        } else {
+            res.send('Produto excluído com sucesso');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erro ao excluir Produto');
+    }
+});
 
 
   app.post('/seguranca/register', function (req, res) {
