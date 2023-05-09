@@ -7,7 +7,6 @@ const helmet = require ('helmet')
 const bcrypt = require ('bcryptjs')
 const jwt = require ('jsonwebtoken')
 
-const routerAPIv2 = require ('./routes/routerAPI-v2')
 
 const bodyParser = require('body-parser');
 const knex = require('knex')({
@@ -60,90 +59,14 @@ const checkToken = (req, res, next) => {
   };
 
 
-app.get('/carros', async (req, res) => {
-    try {
-        const carros = await knex('carros').select('*');
-        res.json(carros);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Erro ao obter carros');
-    }
-});
-
-app.get('/carros/:id', async (req, res) => {
-    try {
-        const carro = await knex('carros').where({ id: req.params.id }).first();
-        if (!carro) {
-            res.status(404).send('Carro não encontrado');
-        } else {
-            res.json(carro);
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Erro ao obter carro');
-    }
-});
-
-app.post('/carros', async (req, res) => {
-    const { descricao, valor, marca } = req.body;
-    if (!descricao || !valor || !marca) {
-        res.status(400).send('Campos obrigatórios não informados');
-        return;
-    }
-    try {
-        const [id] = await knex('carros').insert({ descricao, valor, marca });
-        const carro = await knex('carros').where({ id }).first();
-        res.status(201).json(carro);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Erro ao incluir carro');
-    }
-});
-
-app.put('/carros/:id', async (req, res) => {
-    const { descricao, valor, marca } = req.body;
-    if (!descricao || !valor || !marca) {
-        res.status(400).send('Campos obrigatórios não informados');
-        return;
-    }
-    try {
-        const quantidadeDeCarrosAtualizados = await knex('carros')
-            .where({ id: req.params.id })
-            .update({ descricao, valor, marca });
-        if (quantidadeDeCarrosAtualizados === 0) {
-            res.status(404).send('Carro não encontrado');
-        } else {
-            const carro = await knex('carros').where({ id: req.params.id }).first();
-            res.json(carro);
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Erro ao atualizar carro');
-    }
-});
-
-app.delete('/carros/:id', async (req, res) => {
-    try {
-        const quantidadeDeCarrosExcluidos = await knex('carros').where({ id: req.params.id }).delete();
-        if (quantidadeDeCarrosExcluidos === 0) {
-            res.status(404).send('Carro não encontrado');
-        } else {
-            res.send('Carro excluído com sucesso');
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Erro ao excluir Carro');
-    }
-});
-
 // Cria um manipulador da rota padrão 
-app.get('/produtos', checkToken, function (req, res) {    
+app.get('/v1/produtos', checkToken, function (req, res) {    
     knex.select('*').from('produtos')
     .then (produtos => res.json(produtos))
     .catch (err => res.json ({ message: `Erro ao recuperar produtos: ${err.message}` }))
   });
 
-  app.post('/produtos', checkToken, isAdmin, function (req, res) {
+  app.post('/v1/produtos', checkToken, isAdmin, function (req, res) {
     knex('produtos').insert(req.body, ['id'])
     .then (produtos => {
       let id = produtos[0].id
@@ -152,14 +75,14 @@ app.get('/produtos', checkToken, function (req, res) {
     .catch (err => res.json ({ message: `Erro ao inserir produto: ${err.message}` }))
   });
 
-  app.get('/produtos/:id', checkToken, function (req, res) {
+  app.get('/v1/produtos/:id', checkToken, function (req, res) {
     let id = req.params.id
     knex.select('*').from('produtos').where({ id })
     .then (produtos => res.json(produtos))
     .catch (err => res.json ({ message: `Erro ao recuperar produtos: ${err.message}` }))
   });
 
-  app.put('/produtos/:id', checkToken, isAdmin, async (req, res) => {
+  app.put('/v1/produtos/:id', checkToken, isAdmin, async (req, res) => {
     const { descricao, valor, marca } = req.body;
     if (!descricao || !valor || !marca) {
         res.status(400).send('Campos obrigatórios não informados');
@@ -182,7 +105,7 @@ app.get('/produtos', checkToken, function (req, res) {
 });
 
 
-app.delete('/produtos/:id', checkToken, isAdmin, async (req, res) => {
+app.delete('/v1/produtos/:id', checkToken, isAdmin, async (req, res) => {
     try {
         const quantidadeDeProdutosExcluidos = await knex('produtos').where({ id: req.params.id }).delete();
         if (quantidadeDeProdutosExcluidos === 0) {
@@ -197,7 +120,7 @@ app.delete('/produtos/:id', checkToken, isAdmin, async (req, res) => {
 });
 
 
-  app.post('/seguranca/register', function (req, res) {
+  app.post('/v1/seguranca/register', function (req, res) {
     knex('usuarios').insert({
           nome: req.body.nome, 
           login: req.body.login, 
